@@ -2,8 +2,10 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 #define WINDOW_HEIGHT 1500
-#define WINDOW_WIDTH 2000
+#define WINDOW_WIDTH 3000
 #define PADSPEED 5 // WARN: Yes, it is kinda bad to define this but I am way too lazy to do this properly
+#define INITBALLSPEEDX 5
+#define INITBALLSPEEDY 5
 
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
@@ -88,6 +90,43 @@ void movePad(struct playerPad* pad, int movement){
     }
 }
 
+char padCollisionCheck(struct playerPad pad,vector pos){
+    if(pos.x>pad.pos.x && pos.x < (pad.pos.x+pad.size.x) && pos.y > pad.pos.y && pos.y < (pad.pos.y + pad.size.y)){
+        return 1;
+    }
+    return 0;
+}
+
+char ballCollisionCheck(struct playerPad pad, struct pongBall ball){
+    vector leftDownCorner = {.x = ball.pos.x,.y = (ball.pos.y + ball.size)};
+    vector rightDownCorner = {.x = (ball.pos.x + ball.size),.y = (ball.pos.y + ball.size)};
+    vector rightUpCorner = {.x = (ball.pos.x + ball.size),.y = ball.pos.y};
+    if (padCollisionCheck(pad,ball.pos) || padCollisionCheck(pad,leftDownCorner) || padCollisionCheck(pad,rightDownCorner) || padCollisionCheck(pad,rightUpCorner)){
+       return 1; 
+    }
+    return 0;
+}
+
+void ballMovement(struct state* gameState){
+    vector newPos = {.x = gameState->ball.pos.x + gameState->ball.speed.x,.y = gameState->ball.pos.y + gameState->ball.speed.y};
+    //Y movement
+    if (newPos.y < WINDOW_HEIGHT && newPos.y > 0){
+        gameState->ball.pos.y = newPos.y;
+    }else{
+        gameState->ball.speed.y *= -1;
+    }
+    //X movement
+    if (newPos.x < WINDOW_WIDTH && newPos.x > 0){
+        if (ballCollisionCheck(gameState->p1Pad,gameState->ball) || ballCollisionCheck(gameState->p2Pad,gameState->ball)){
+            gameState->ball.speed.x *= -1;
+        }
+        gameState->ball.pos.x += gameState->ball.speed.x;
+    }else{
+        gameState->ball.pos.x = (WINDOW_WIDTH/2) - gameState->ball.size;
+        gameState->ball.pos.y = (WINDOW_HEIGHT/2) - gameState->ball.size;
+    }
+}
+
 int init(void){
 
     SDL_SetAppMetadata("pong","1.0","com.game.pong");
@@ -158,6 +197,7 @@ char mainLoop(struct state* gameState){
     SDL_RenderClear(renderer);
     
     inputProcessing(gameState);
+    ballMovement(gameState);
 
     drawPad(gameState->p1Pad);
     drawPad(gameState->p2Pad);
@@ -184,7 +224,7 @@ int main(void){
     colour gameColour = {255,255,255};
     struct input inputs[] = {{.key = SDLK_A},{.key = SDLK_S},{.key = SDLK_J},{.key = SDLK_K}};
     struct state gameState = {
-        .ball = {.pos = {.x = (WINDOW_WIDTH/2)-ballSize,.y = (WINDOW_HEIGHT/2)-ballSize},.size=ballSize,.colour = gameColour,.speed = {.x=10,.y=10}},
+        .ball = {.pos = {.x = (WINDOW_WIDTH/2)-ballSize,.y = (WINDOW_HEIGHT/2)-ballSize},.size=ballSize,.colour = gameColour,.speed = {.x=INITBALLSPEEDX,.y=INITBALLSPEEDY}},
         .p1Pad = {.size=padSize,.pos={.x=0,.y=(WINDOW_HEIGHT/2)-(padSize.y/2)},.colour = gameColour},
         .p2Pad = {.size=padSize,.pos={.x=WINDOW_WIDTH-padSize.x,.y=(WINDOW_HEIGHT/2)-(padSize.y/2)},.colour = gameColour},
         .inputs = {.length = sizeof(inputs)/sizeof(struct input),.array = inputs}
