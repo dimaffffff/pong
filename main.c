@@ -20,6 +20,17 @@ struct playerPad{
     int x,y,height,width;
     struct colour colour;
 };
+struct state{
+    struct pongBall ball;
+    struct playerPad p1Pad,p2Pad;
+};
+struct state getState(void){
+    static const int padWidth = 30;
+    static struct state state = {
+    .ball = {.x = WINDOW_WIDTH/2, .y = WINDOW_HEIGHT,.size = 50},
+    .p1Pad = {.x = 0, .y = WINDOW_HEIGHT/2,.height=WINDOW_HEIGHT/2,.width=padWidth}}; // TODO:
+    return state;
+}
 
 int init(void){
     int padWidth = 30;
