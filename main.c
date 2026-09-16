@@ -7,8 +7,26 @@
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
 
+struct colour{
+    int r,g,b;
+};
+//Not really a ball, more like a square
+struct pongBall{
+    int x,y,size;
+    struct colour colour;
+};
+
+struct playerPad{
+    int x,y,height,width;
+    struct colour colour;
+};
 
 int init(void){
+    int padWidth = 30;
+    struct pongBall ball = {.x = WINDOW_WIDTH/2, .y = WINDOW_HEIGHT,.size = 50};
+    struct playerPad p1Pad = {.x = 0, .y = WINDOW_HEIGHT/2,.height=WINDOW_HEIGHT/2,.width=padWidth};
+    struct playerPad p2Pad = {.x = WINDOW_WIDTH-padWidth, .y = WINDOW_HEIGHT/2,.height=WINDOW_HEIGHT/2,.width=padWidth};
+
     SDL_SetAppMetadata("pong","1.0","com.game.pong");
 
     if (!SDL_Init(SDL_INIT_VIDEO)){
@@ -42,11 +60,8 @@ char processEvents(void){
 
 char mainLoop(void){
     const double time = ((double)SDL_GetTicks())/1000.0;
-    const float red = (float) (0.5 + 0.5 * SDL_sin(time));
-    const float green = (float) (0.5 + 0.5 * SDL_sin(time + SDL_PI_D * 2 / 3));
-    const float blue = (float) (0.5 + 0.5 * SDL_sin(time + SDL_PI_D * 4 / 3));
 
-    SDL_SetRenderDrawColorFloat(renderer,red,green,blue,SDL_ALPHA_OPAQUE_FLOAT);
+    SDL_SetRenderDrawColorFloat(renderer,0,0,0,SDL_ALPHA_OPAQUE);
 
     SDL_RenderClear(renderer);
 
